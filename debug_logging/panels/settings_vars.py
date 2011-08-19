@@ -1,7 +1,7 @@
 import re
-from django.conf import settings
 from django.views.debug import get_safe_settings
 from debug_toolbar.panels.settings_vars import SettingsVarsDebugPanel
+from debug_logging.settings import LOGGING_CONFIG
 
 DEFAULT_LOGGED_SETTINGS = [
     'CACHE_BACKEND', 'CACHE_MIDDLEWARE_KEY_PREFIX', 'CACHE_MIDDLEWARE_SECONDS',
@@ -14,17 +14,16 @@ DEFAULT_LOGGED_SETTINGS = [
 
 class SettingsVarsLoggingPanel(SettingsVarsDebugPanel):
     """Extends the Settings debug panel to enable logging."""
-    
+
     def __init__(self, *args, **kwargs):
         super(SettingsVarsLoggingPanel, self).__init__(*args, **kwargs)
-        self.logged_settings = (getattr(settings, 'DEBUG_LOGGING_CONFIG', {})
-                                    .get('LOGGED_SETTINGS', None))
+        self.logged_settings = LOGGING_CONFIG['LOGGED_SETTINGS']
         if not self.logged_settings:
             self.logged_settings = DEFAULT_LOGGED_SETTINGS
         self.logged_settings_re = re.compile('|'.join(self.logged_settings))
-    
+
     def process_response(self, request, response):
-        if getattr(settings, 'DEBUG_LOGGING_CONFIG', {}).get('ENABLED', False):
+        if LOGGING_CONFIG['ENABLED']:
             # Logging is enabled, so log the settings
             safe_settings = get_safe_settings()
             log_settings = {}
