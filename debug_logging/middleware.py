@@ -4,7 +4,6 @@ from django.core.urlresolvers import reverse, NoReverseMatch
 
 from debug_toolbar.toolbar.loader import DebugToolbar
 from debug_toolbar.middleware import DebugToolbarMiddleware
-from debug_logging.handlers import DBHandler
 from debug_logging.settings import LOGGING_CONFIG
 
 logger = logging.getLogger('debug.logger')
