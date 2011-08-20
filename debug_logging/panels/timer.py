@@ -1,4 +1,3 @@
-from django.conf import settings
 from debug_toolbar.panels.timer import TimerDebugPanel
 from debug_logging.settings import LOGGING_CONFIG
 

@@ -1,4 +1,4 @@
-from debug_toolbar.panels.sql import SQLDebugPanel, reformat_sql
+from debug_toolbar.panels.sql import SQLDebugPanel
 from debug_logging.settings import LOGGING_CONFIG
 # This whole block is to support the workaround below on the __init__ method,
 # and can be deleted once #178 on django-debug-toolbar is closed.
