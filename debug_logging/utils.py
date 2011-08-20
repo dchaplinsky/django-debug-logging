@@ -13,6 +13,15 @@ def get_project_name():
 def get_hostname():
     return platform.node()
 
+def get_class_from_string(import_path):
+    if '.' not in import_path:
+        raise TypeError(
+            "'import_path' argument to 'debug_logging.utils.get_class' must "
+            "contain at least one dot."
+        )
+    module_name, object_name = import_path.rsplit('.', 1)
+    module = import_module(module_name)
+    return getattr(module, object_name)
 
 def get_revision():
     vcs = getattr(settings, 'DEBUG_TOOLBAR_CONFIG', {}).get('VCS', None)

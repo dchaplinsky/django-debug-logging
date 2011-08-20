@@ -7,8 +7,8 @@ from debug_toolbar.middleware import DebugToolbarMiddleware
 from debug_logging.settings import LOGGING_CONFIG
 
 logger = logging.getLogger('debug.logger')
-logger.setLevel(logging.DEBUG)
-logger.addHandler(LOGGING_CONFIG["HANDLER"]())
+for HandlerClass in LOGGING_CONFIG["LOGGING_HANDLERS"]:
+    logger.addHandler(HandlerClass())
 
 
 class DebugLoggingMiddleware(DebugToolbarMiddleware):
