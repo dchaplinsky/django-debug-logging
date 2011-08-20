@@ -31,7 +31,7 @@ class DBHandler(logging.Handler):
                     try:
                         filters['settings'] = deepcopy(record.msg[field])
                     except Exception as e:
-                        filters['settings'] = {'Exception': '%s' % e.message}
+                        filters['settings'] = {'Exception': '%s' % repr(e)}
 
                 elif field in record.msg.keys():
                     filters[field] = record.msg[field]
