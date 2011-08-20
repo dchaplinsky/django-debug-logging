@@ -4,11 +4,10 @@ from debug_logging.utils import get_handler_instance
 
 DEFAULT_CONFIG = {
     'ENABLED': False,
-    'SQL_EXTRA': True,
-    'CACHE_EXTRA': True,
+    'SQL_EXTRA': False,
+    'CACHE_EXTRA': False,
     'BLACKLIST': [],
     'LOGGING_HANDLERS': ('debug_logging.handlers.DBHandler',),
-    'CACHE_EXTRA': False,
     'LOGGED_SETTINGS': None,
 }
 
