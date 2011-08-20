@@ -8,7 +8,7 @@ from debug_logging.settings import LOGGING_CONFIG
 
 logger = logging.getLogger('debug.logger')
 for HandlerClass in LOGGING_CONFIG["LOGGING_HANDLERS"]:
-    logger.addHandler(HandlerClass())
+    logger.addHandler(HandlerClass)
 
 
 class DebugLoggingMiddleware(DebugToolbarMiddleware):

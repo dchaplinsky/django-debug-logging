@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from debug_logging.utils import get_class_from_string
+from debug_logging.utils import get_handler_instance
 
 DEFAULT_CONFIG = {
     'ENABLED': False,
@@ -16,8 +16,8 @@ def get_logging_config():
     _logging_config = dict(DEFAULT_CONFIG,
                           **getattr(settings, 'DEBUG_LOGGING_CONFIG', {}))
 
-    _logging_config['LOGGING_HANDLERS'] = [get_class_from_string(klass_string)
-                                                for klass_string in _logging_config['LOGGING_HANDLERS']]
+    _logging_config['LOGGING_HANDLERS'] = [get_handler_instance(handler)
+                                                for handler in _logging_config['LOGGING_HANDLERS']]
     return _logging_config
 
 

@@ -159,4 +159,4 @@ class Command(BaseCommand):
         test_run.end = datetime.now()
         test_run.save()
 
-        self.status_update('done!\n')
+        self.status_update('\ndone!')
