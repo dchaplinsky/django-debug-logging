@@ -149,11 +149,14 @@ class Command(BaseCommand):
                     self.status_update('\nSkipped %s because of an error'
                                        % url)
                     continue
-            if response and response.status_code == 200:
-                self.status_ticker()
-            else:
-                self.status_update('\nURL %s responded with code %s'
-                                   % (url, response.status_code))
+            try:
+                if response and response.status_code == 200:
+                    self.status_ticker()
+                else:
+                    self.status_update('\nURL %s responded with code %s'
+                                    % (url, response.status_code))
+            except NameError as e:
+                self.status_update('\nError on url:%s\n%s\n' % (url, e))
 
         # Close out the log entry
         test_run.end = datetime.now()
