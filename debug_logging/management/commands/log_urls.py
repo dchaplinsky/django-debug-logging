@@ -52,11 +52,6 @@ class Command(BaseCommand):
         if not self.quiet:
             print msg
 
-    def status_ticker(self):
-        if not self.quiet:
-            sys.stdout.write('.')
-            sys.stdout.flush()
-
     def handle(self, *url_lists, **options):
         from django.conf import settings
         from debug_logging.models import TestRun
@@ -150,9 +145,7 @@ class Command(BaseCommand):
                                        % url)
                     continue
             try:
-                if response and response.status_code == 200:
-                    self.status_ticker()
-                else:
+                if response and not response.status_code == 200:
                     self.status_update('\nURL %s responded with code %s'
                                     % (url, response.status_code))
             except NameError as e:

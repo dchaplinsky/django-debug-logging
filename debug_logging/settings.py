@@ -1,13 +1,20 @@
+from logging import StreamHandler, Formatter
+
 from django.conf import settings
 
 from debug_logging.utils import get_handler_instance
+
+fmt_tick = Formatter('-')
+sth_ticker = StreamHandler()
+sth_ticker.setFormatter(fmt_tick)
+
 
 DEFAULT_CONFIG = {
     'ENABLED': False,
     'SQL_EXTRA': False,
     'CACHE_EXTRA': False,
     'BLACKLIST': [],
-    'LOGGING_HANDLERS': ('debug_logging.handlers.DBHandler',),
+    'LOGGING_HANDLERS': (sth_ticker, 'debug_logging.handlers.DBHandler'),
     'LOGGED_SETTINGS': None,
 }
 
