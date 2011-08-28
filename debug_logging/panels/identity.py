@@ -2,7 +2,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from debug_logging.utils import get_project_name, get_hostname
 from debug_toolbar.panels import DebugPanel
-from debug_logging.settings import LOGGING_CONFIG
 
 class IdentityLoggingPanel(DebugPanel):
     """
@@ -21,7 +20,7 @@ class IdentityLoggingPanel(DebugPanel):
             return '%s on %s' % (project_name, hostname)
 
     def process_response(self, request, response):
-        if LOGGING_CONFIG['ENABLED']:
+        if hasattr(request, "debug_logging") and request.debug_logging['ENABLED']:
             project_name, hostname = self.identify()
             # Logging is enabled, so log the revision
             request.debug_logging_stats.update({

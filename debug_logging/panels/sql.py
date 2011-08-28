@@ -1,5 +1,4 @@
 from debug_toolbar.panels.sql import SQLDebugPanel
-from debug_logging.settings import LOGGING_CONFIG
 # This whole block is to support the workaround below on the __init__ method,
 # and can be deleted once #178 on django-debug-toolbar is closed.
 try:
@@ -34,7 +33,7 @@ class SQLLoggingPanel(SQLDebugPanel):
         self._transaction_ids = {}
 
     def process_response(self, request, response):
-        if LOGGING_CONFIG['ENABLED']:
+        if hasattr(request, 'debug_logging') and request.debug_logging['ENABLED']:
             # Call the nav_subtitle method so that the query data is captured
             self.nav_subtitle()
 
@@ -45,7 +44,7 @@ class SQLLoggingPanel(SQLDebugPanel):
 
             queries = [q for a, q in self._queries]
 
-            if LOGGING_CONFIG['SQL_EXTRA']:
+            if request.debug_logging['SQL_EXTRA']:
                 stats['sql_queries'] = queries
 
             stats['sql_time'] = self._sql_time

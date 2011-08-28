@@ -15,26 +15,25 @@ class DebugLoggingMiddleware(DebugToolbarMiddleware):
     """
     Extends the Debug Toolbar middleware with some extras for logging stats.
     """
-
     def __init__(self):
         super(DebugLoggingMiddleware, self).__init__()
 
-        # Determine whether logging is enabled
-        self.logging_enabled = False
-        if LOGGING_CONFIG['ENABLED']:
-            self.logging_enabled = True
-
     def _show_toolbar(self, request):
-        if self.logging_enabled:
+        if self._capture_debug_logging(request):
             # If logging is enabled, don't show the toolbar
             return False
         return super(DebugLoggingMiddleware, self)._show_toolbar(request)
 
+    def _capture_debug_logging(self, request):
+        return request.META.get('DJANGO_DEBUG_LOGGING', False)
+
     def process_request(self, request):
+        request.debug_logging = LOGGING_CONFIG
+        request.debug_logging['ENABLED'] = self._capture_debug_logging(request)
         response = super(DebugLoggingMiddleware, self).process_request(request)
 
-        if self.logging_enabled:
-            blacklist = LOGGING_CONFIG['BLACKLIST']
+        if request.debug_logging['ENABLED']:
+            blacklist = request.debug_logging['BLACKLIST']
 
             # If the debug-logging frontend is in use, add it to the blacklist
             try:
@@ -61,9 +60,8 @@ class DebugLoggingMiddleware(DebugToolbarMiddleware):
     def process_response(self, request, response):
         response = super(DebugLoggingMiddleware, self).process_response(
             request, response)
-
         if response.status_code == 200:
-            if self.logging_enabled and hasattr(request, 'debug_logging_stats'):
+            if request.debug_logging['ENABLED'] and hasattr(request, 'debug_logging_stats'):
                 # If logging is enabled, log the stats to the selected handler
                 logger.debug(request.debug_logging_stats)
 

@@ -1,5 +1,4 @@
 from debug_toolbar.panels.timer import TimerDebugPanel
-from debug_logging.settings import LOGGING_CONFIG
 
 
 class TimerLoggingPanel(TimerDebugPanel):
@@ -19,10 +18,10 @@ class TimerLoggingPanel(TimerDebugPanel):
         return utime, stime, vcsw, ivcsw, minflt, majflt
 
     def process_response(self, request, response):
-        response = super(TimerLoggingPanel, self).process_response(
-            request, response)
+        if hasattr(request, 'debug_logging') and request.debug_logging['ENABLED']:
+            response = super(TimerLoggingPanel, self).process_response(
+                request, response)
 
-        if LOGGING_CONFIG['ENABLED']:
             utime, stime, vcsw, ivcsw, minflt, majflt = self.get_stats()
             stats = {
                 'timer_utime': utime,
@@ -34,4 +33,4 @@ class TimerLoggingPanel(TimerDebugPanel):
             }
             request.debug_logging_stats.update(stats)
 
-        return response
+            return response

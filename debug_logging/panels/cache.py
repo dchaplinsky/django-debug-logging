@@ -25,7 +25,7 @@ class CacheLoggingPanel(CacheDebugPanel):
             cache.cache = self.cache
 
     def process_response(self, request, response):
-        if LOGGING_CONFIG['ENABLED']:
+        if hasattr(request, 'debug_logging') and request.debug_logging['ENABLED']:
             # Logging is enabled, so log the cache data
 
             stats = {}

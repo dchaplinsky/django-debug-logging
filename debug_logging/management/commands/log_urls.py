@@ -1,10 +1,12 @@
 from __future__ import with_statement
-import sys
 from datetime import datetime
 from optparse import  make_option
 
 from django.test.client import Client
 from django.core.management.base import BaseCommand, CommandError
+
+from debug_logging.settings import LOGGING_CONFIG
+from debug_logging.handlers import DBHandler
 
 
 class Command(BaseCommand):
@@ -62,6 +64,13 @@ class Command(BaseCommand):
         self.quiet = verbosity < 1
         self.verbose = verbosity > 1
 
+        # Check if the DBHandler is used
+        if True in [isinstance(handler_instance, DBHandler) 
+                        for handler_instance in LOGGING_CONFIG["LOGGING_HANDLERS"]]:
+            self.has_dbhandler = True
+        else:
+            self.has_dbhandler = False
+
         # Check for a username without a password, or vice versa
         if options['username'] and not options['password']:
             raise CommandError('If a username is provided, a password must '
@@ -79,42 +88,44 @@ class Command(BaseCommand):
         if 'debug_logging.panels.revision.RevisionLoggingPanel' in panels:
             filters['revision'] = get_revision()
 
-        # Check to see if there is already a TestRun object open
-        existing_runs = TestRun.objects.filter(end__isnull=True, **filters)
-        if existing_runs:
-            if options['manual_start']:
-                # If the --manual-start option was specified, error out because
-                # there is already an open TestRun
-                raise CommandError('There is already an open TestRun.')
+        if self.has_dbhandler:
+            # Check to see if there is already a TestRun object open
+            existing_runs = TestRun.objects.filter(end__isnull=True, **filters)
 
-            # Otherwise, close it so that we can open a new one
-            for existing_run in existing_runs:
-                existing_run.end = datetime.now()
-                existing_run.save()
+            if existing_runs:
+                if options['manual_start']:
+                    # If the --manual-start option was specified, error out because
+                    # there is already an open TestRun
+                    raise CommandError('There is already an open TestRun.')
 
+                # Otherwise, close it so that we can open a new one
+                for existing_run in existing_runs:
+                    existing_run.end = datetime.now()
+                    existing_run.save()
+
+                if options['manual_end']:
+                    # If the --manual-end option was specified, we can now exit
+                    self.status_update('The TestRun was successfully closed.')
+                    return
             if options['manual_end']:
-                # If the --manual-end option was specified, we can now exit
-                self.status_update('The TestRun was successfully closed.')
+                # The --manual-end option was specified, but there was no existing
+                # run to close.
+                raise CommandError('There is no open TestRun to end.')
+
+            filters['start'] = datetime.now()
+            test_run = TestRun(**filters)
+
+            if options['name']:
+                test_run.name = options['name']
+            if options['description']:
+                test_run.description = options['description']
+
+            test_run.save()
+
+            if options['manual_start']:
+                # The TestRun was successfully created
+                self.status_update('A new TestRun was successfully opened.')
                 return
-        if options['manual_end']:
-            # The --manual-end option was specified, but there was no existing
-            # run to close.
-            raise CommandError('There is no open TestRun to end.')
-
-        filters['start'] = datetime.now()
-        test_run = TestRun(**filters)
-
-        if options['name']:
-            test_run.name = options['name']
-        if options['description']:
-            test_run.description = options['description']
-
-        test_run.save()
-
-        if options['manual_start']:
-            # The TestRun was successfully created
-            self.status_update('A new TestRun was successfully opened.')
-            return
 
         urls = []
         for url_list in url_lists:
@@ -132,11 +143,13 @@ class Command(BaseCommand):
 
         for url in urls:
             try:
-                response = client.get(url)
+                response = client.get(url,
+                        **{'DJANGO_DEBUG_LOGGING': True,})
             except KeyboardInterrupt, e:
                 # Close out the log entry
-                test_run.end = datetime.now()
-                test_run.save()
+                if self.has_dbhandler:
+                    test_run.end = datetime.now()
+                    test_run.save()
 
                 raise CommandError('Debug logging run cancelled.')
             except:
@@ -152,7 +165,8 @@ class Command(BaseCommand):
                 self.status_update('\nError on url:%s\n%s\n' % (url, e))
 
         # Close out the log entry
-        test_run.end = datetime.now()
-        test_run.save()
+        if self.has_dbhandler:
+            test_run.end = datetime.now()
+            test_run.save()
 
         self.status_update('\ndone!')
