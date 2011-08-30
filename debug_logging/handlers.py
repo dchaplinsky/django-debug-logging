@@ -24,21 +24,10 @@ class DBHandler(logging.Handler):
                 return
             record.msg['test_run'] = test_run
 
-            filters = {}
+            fields = {}
             for field in DebugLogRecord._meta.get_all_field_names():
-                # TODO: Understand why I can't deep copy the settings
-                if field == "settings":
-                    try:
-                        filters['settings'] = deepcopy(record.msg[field])
-                    except Exception as e:
-                        filters['settings'] = {'Exception': '%s' % repr(e)}
+                if field in record.msg.keys():
+                    fields[field] = record.msg[field]
 
-                elif field in record.msg.keys():
-                    filters[field] = record.msg[field]
-
-            try:
-                instance = DebugLogRecord(**filters)
-                instance.save()
-            except Exception as e:
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                traceback.print_tb(exc_traceback, file=sys.stdout)
+            instance = DebugLogRecord(**fields)
+            instance.save()

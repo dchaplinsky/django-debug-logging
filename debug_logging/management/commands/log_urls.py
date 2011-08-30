@@ -65,11 +65,10 @@ class Command(BaseCommand):
         self.verbose = verbosity > 1
 
         # Check if the DBHandler is used
-        if True in [isinstance(handler_instance, DBHandler) 
-                        for handler_instance in LOGGING_CONFIG["LOGGING_HANDLERS"]]:
-            self.has_dbhandler = True
-        else:
-            self.has_dbhandler = False
+        self.has_dbhandler = False
+        for handler in LOGGING_CONFIG["LOGGING_HANDLERS"]:
+            if isinstance(handler, DBHandler):
+                self.has_dbhandler = True
 
         # Check for a username without a password, or vice versa
         if options['username'] and not options['password']:
@@ -79,23 +78,23 @@ class Command(BaseCommand):
             raise CommandError('If a password is provided, a username must '
                                'also be provided.')
 
-        # Create a TestRun object to track this run
-        filters = {}
-        panels = settings.DEBUG_TOOLBAR_PANELS
-        if 'debug_logging.panels.identity.IdentityLoggingPanel' in panels:
-            filters['project_name'] = get_project_name()
-            filters['hostname'] = get_hostname()
-        if 'debug_logging.panels.revision.RevisionLoggingPanel' in panels:
-            filters['revision'] = get_revision()
-
         if self.has_dbhandler:
+            # Create a TestRun object to track this run
+            filters = {}
+            panels = settings.DEBUG_TOOLBAR_PANELS
+            if 'debug_logging.panels.identity.IdentityLoggingPanel' in panels:
+                filters['project_name'] = get_project_name()
+                filters['hostname'] = get_hostname()
+            if 'debug_logging.panels.revision.RevisionLoggingPanel' in panels:
+                filters['revision'] = get_revision()
+
             # Check to see if there is already a TestRun object open
             existing_runs = TestRun.objects.filter(end__isnull=True, **filters)
 
             if existing_runs:
+                # If the --manual-start option was specified, error out because
+                # there is already an open TestRun
                 if options['manual_start']:
-                    # If the --manual-start option was specified, error out because
-                    # there is already an open TestRun
                     raise CommandError('There is already an open TestRun.')
 
                 # Otherwise, close it so that we can open a new one
@@ -107,9 +106,9 @@ class Command(BaseCommand):
                     # If the --manual-end option was specified, we can now exit
                     self.status_update('The TestRun was successfully closed.')
                     return
-            if options['manual_end']:
-                # The --manual-end option was specified, but there was no existing
-                # run to close.
+            elif options['manual_end']:
+                # The --manual-end option was specified, but there was no
+                # existing run to close.
                 raise CommandError('There is no open TestRun to end.')
 
             filters['start'] = datetime.now()
@@ -143,8 +142,9 @@ class Command(BaseCommand):
 
         for url in urls:
             try:
-                response = client.get(url,
-                        **{'DJANGO_DEBUG_LOGGING': True,})
+                # Create a GET request using the django test client, adding the
+                # DJANGO_DEBUG_LOGGING header to trigger logging of the request
+                response = client.get(url, **{'DJANGO_DEBUG_LOGGING': True,})
             except KeyboardInterrupt, e:
                 # Close out the log entry
                 if self.has_dbhandler:
@@ -169,4 +169,4 @@ class Command(BaseCommand):
             test_run.end = datetime.now()
             test_run.save()
 
-        self.status_update('\ndone!')
+        self.status_update('\nDone!')
